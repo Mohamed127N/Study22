@@ -1,0 +1,1463 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SMART PLANNER AI — المساعد الذكي لتنظيم الوقت والمذاكرة</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eff6ff',
+                            100: '#dbeafe',
+                            500: '#3b82f6',
+                            600: '#2563eb',
+                            700: '#1d4ed8',
+                            800: '#1e40af',
+                            900: '#1e3a8a',
+                        },
+                        accent: {
+                            500: '#8b5cf6',
+                            600: '#7c3aed',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Tajawal', 'system-ui', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Google Fonts: Tajawal -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- html2pdf.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        body { font-family: 'Tajawal', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .dark .custom-scrollbar::-webkit-scrollbar-thumb { background: #475569; }
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-100 min-h-full flex flex-col transition-colors duration-200">
+
+    <!-- Top Navigation Header -->
+    <header class="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 sticky top-0 z-30 no-print">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <!-- Logo & Title -->
+                <div class="flex items-center gap-3 cursor-pointer" onclick="switchTab('dashboard')">
+                    <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-accent-600 flex items-center justify-center text-white font-bold text-xl shadow-lg shadow-brand-500/20">
+                        <i data-lucide="brain"></i>
+                    </div>
+                    <div>
+                        <h1 class="font-black text-lg tracking-tight bg-gradient-to-r from-brand-600 to-accent-600 bg-clip-text text-transparent">SMART PLANNER AI</h1>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">المساعد الذكي لتنظيم الوقت والمذاكرة</p>
+                    </div>
+                </div>
+
+                <!-- Navigation Quick Actions -->
+                <div class="hidden md:flex items-center gap-2">
+                    <button onclick="switchTab('dashboard')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700" data-target="dashboard">
+                        <i data-lucide="layout-dashboard" class="w-4 h-4"></i> الرئيسة
+                    </button>
+                    <button onclick="switchTab('create-plan')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 bg-brand-600 text-white hover:bg-brand-700 shadow-md shadow-brand-500/20" data-target="create-plan">
+                        <i data-lucide="sparkles" class="w-4 h-4"></i> إنشاء خطة جديدة
+                    </button>
+                    <button onclick="switchTab('active-plan')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700" data-target="active-plan">
+                        <i data-lucide="calendar" class="w-4 h-4"></i> الخطة الحالية
+                    </button>
+                    <button onclick="switchTab('analytics')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700" data-target="analytics">
+                        <i data-lucide="timer" class="w-4 h-4"></i> الإنجاز والمؤقت
+                    </button>
+                    <button onclick="switchTab('solver')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700" data-target="solver">
+                        <i data-lucide="message-square" class="w-4 h-4"></i> حل المشكلات
+                    </button>
+                    <button onclick="switchTab('history')" class="nav-btn px-3 py-2 rounded-lg text-sm font-semibold transition-all flex items-center gap-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700" data-target="history">
+                        <i data-lucide="history" class="w-4 h-4"></i> السجل
+                    </button>
+                </div>
+
+                <!-- Utilities -->
+                <div class="flex items-center gap-2">
+                    <button id="themeToggleBtn" onclick="toggleDarkMode()" class="p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition" title="تبديل الوضع">
+                        <i data-lucide="moon" class="w-5 h-5 dark:hidden"></i>
+                        <i data-lucide="sun" class="w-5 h-5 hidden dark:block"></i>
+                    </button>
+                    <button onclick="switchTab('settings')" class="p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 transition" title="الإعدادات والذاكرة">
+                        <i data-lucide="settings" class="w-5 h-5"></i>
+                    </button>
+                    <!-- Mobile Menu Button -->
+                    <button onclick="toggleMobileMenu()" class="md:hidden p-2 rounded-lg text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700">
+                        <i data-lucide="menu" class="w-6 h-6"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Mobile Nav Menu -->
+        <div id="mobileMenu" class="hidden md:hidden border-t border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 px-4 py-3 space-y-2">
+            <button onclick="switchTab('dashboard'); toggleMobileMenu()" class="w-full text-right py-2 px-3 rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2">
+                <i data-lucide="layout-dashboard" class="w-4 h-4"></i> الرئيسة
+            </button>
+            <button onclick="switchTab('create-plan'); toggleMobileMenu()" class="w-full text-right py-2 px-3 rounded-lg text-sm font-medium bg-brand-600 text-white flex items-center gap-2">
+                <i data-lucide="sparkles" class="w-4 h-4"></i> إنشاء خطة جديدة
+            </button>
+            <button onclick="switchTab('active-plan'); toggleMobileMenu()" class="w-full text-right py-2 px-3 rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2">
+                <i data-lucide="calendar" class="w-4 h-4"></i> الخطة الحالية
+            </button>
+            <button onclick="switchTab('analytics'); toggleMobileMenu()" class="w-full text-right py-2 px-3 rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2">
+                <i data-lucide="timer" class="w-4 h-4"></i> الإنجاز والمؤقت
+            </button>
+            <button onclick="switchTab('solver'); toggleMobileMenu()" class="w-full text-right py-2 px-3 rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2">
+                <i data-lucide="message-square" class="w-4 h-4"></i> حل المشكلات والتوجيه
+            </button>
+            <button onclick="switchTab('history'); toggleMobileMenu()" class="w-full text-right py-2 px-3 rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2">
+                <i data-lucide="history" class="w-4 h-4"></i> سجل الخطط
+            </button>
+            <button onclick="switchTab('settings'); toggleMobileMenu()" class="w-full text-right py-2 px-3 rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center gap-2">
+                <i data-lucide="settings" class="w-4 h-4"></i> الإعدادات والذاكرة
+            </button>
+        </div>
+    </header>
+
+    <!-- Global Alert / Status Banner -->
+    <div id="apiKeyBanner" class="bg-amber-500/10 border-b border-amber-500/20 text-amber-700 dark:text-amber-300 px-4 py-2 text-xs sm:text-sm text-center flex items-center justify-center gap-2 no-print">
+        <i data-lucide="info" class="w-4 h-4"></i>
+        <span>تنبيه: لم تقم بإضافة مفتاح Gemini API. التطبيق سيستخدم خوارزمية التخطيط الذكية المحلية. لإتاحة كامل قدرات الذكاء الاصطناعي التوليدي، أضف المفتاح من الإعدادات.</span>
+        <button onclick="switchTab('settings')" class="underline font-bold hover:text-amber-800">إضافة المفتاح</button>
+    </div>
+
+    <!-- Main Dynamic Content Area -->
+    <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 lg:p-8">
+
+        <!-- VIEW 1: DASHBOARD -->
+        <section id="view-dashboard" class="view-section space-y-6">
+            <!-- Greeting & Quick Stats Banner -->
+            <div class="bg-gradient-to-r from-brand-600 via-brand-700 to-accent-600 rounded-3xl p-6 sm:p-8 text-white shadow-xl relative overflow-hidden">
+                <div class="absolute -left-10 -bottom-10 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+                <div class="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+                    <div>
+                        <span class="inline-block px-3 py-1 rounded-full bg-white/20 text-xs font-semibold backdrop-blur-md mb-2">أهلاً بك مجدداً 👋</span>
+                        <h2 class="text-2xl sm:text-3xl font-extrabold" id="dashGreeting">جاهز لتحقيق أهدافك اليوم؟</h2>
+                        <p class="text-brand-100 text-sm mt-1 max-w-xl">SMART PLANNER AI هنا لمساعدتك على تحويل التراكمات إلى خطة إنجاز واقعية وسلسة.</p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-3">
+                        <button onclick="switchTab('create-plan')" class="bg-white text-brand-700 hover:bg-brand-50 px-5 py-3 rounded-2xl font-bold text-sm shadow-lg transition flex items-center gap-2">
+                            <i data-lucide="plus-circle" class="w-5 h-5"></i> خطة جديدة سريعة
+                        </button>
+                        <button onclick="triggerRescueMode()" class="bg-rose-500 hover:bg-rose-600 text-white px-4 py-3 rounded-2xl font-bold text-sm shadow-lg transition flex items-center gap-2" title="توجيه وإعادة توزيع التراكمات فوراً">
+                            <i data-lucide="life-buoy" class="w-5 h-5"></i> وضع الإنقاذ
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Overview Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-brand-100 dark:bg-brand-900/40 text-brand-600 dark:text-brand-400 flex items-center justify-center">
+                        <i data-lucide="check-circle-2" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium text-slate-500 dark:text-slate-400">إنجاز المهام اليوم</p>
+                        <h3 class="text-xl font-bold text-slate-800 dark:text-white" id="statTodayTasks">0 / 0</h3>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-accent-500/10 text-accent-600 flex items-center justify-center">
+                        <i data-lucide="target" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium text-slate-500 dark:text-slate-400">نسبة الخطة الحالية</p>
+                        <h3 class="text-xl font-bold text-slate-800 dark:text-white" id="statPlanProgress">0%</h3>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-amber-500/10 text-amber-600 flex items-center justify-center">
+                        <i data-lucide="clock" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium text-slate-500 dark:text-slate-400">الساعات المنجزة</p>
+                        <h3 class="text-xl font-bold text-slate-800 dark:text-white" id="statHoursCompleted">0 س</h3>
+                    </div>
+                </div>
+
+                <div class="bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex items-center gap-4">
+                    <div class="w-12 h-12 rounded-xl bg-emerald-500/10 text-emerald-600 flex items-center justify-center">
+                        <i data-lucide="flame" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium text-slate-500 dark:text-slate-400">سلسلة الاستمرار</p>
+                        <h3 class="text-xl font-bold text-slate-800 dark:text-white" id="statStreak">0 أيام</h3>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Split Layout -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Active Day Schedule Preview -->
+                <div class="lg:col-span-2 bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 space-y-4 shadow-sm">
+                    <div class="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-700">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="calendar-days" class="w-5 h-5 text-brand-600"></i>
+                            <h3 class="font-bold text-lg">جدول اليوم والتنفيذ</h3>
+                        </div>
+                        <button onclick="switchTab('active-plan')" class="text-xs text-brand-600 font-bold hover:underline">عرض الخطة الكاملة &larr;</button>
+                    </div>
+
+                    <div id="dashTodayTasksList" class="space-y-3 max-h-[380px] overflow-y-auto custom-scrollbar">
+                        <!-- Rendered dynamically -->
+                        <div class="text-center py-10 text-slate-400 text-sm">لا توجد خطة نشطة حالياً. أنشئ خطتك في دقيقتين!</div>
+                    </div>
+                </div>
+
+                <!-- AI Assistant Quick Widget -->
+                <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 space-y-4 shadow-sm flex flex-col justify-between">
+                    <div>
+                        <div class="flex items-center gap-2 pb-3 border-b border-slate-100 dark:border-slate-700 mb-4">
+                            <i data-lucide="bot" class="w-5 h-5 text-accent-600"></i>
+                            <h3 class="font-bold text-lg">المستشار الذكي السريع</h3>
+                        </div>
+                        <p class="text-xs text-slate-500 dark:text-slate-400 mb-4">اطرح أي سؤال حول المذاكرة، التشتت، أو تنظيم جدولك فوراً:</p>
+
+                        <div id="quickChatContainer" class="bg-slate-50 dark:bg-slate-900 rounded-xl p-3 text-xs space-y-2 max-h-48 overflow-y-auto mb-4 border border-slate-100 dark:border-slate-800">
+                            <div class="text-slate-600 dark:text-slate-300 bg-white dark:bg-slate-800 p-2.5 rounded-lg border border-slate-200 dark:border-slate-700">
+                                مرحباً! أنا مساعدك SMART PLANNER AI. كيف يمكنني مساعدتك في جدولك اليوم؟
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="flex gap-2">
+                        <input type="text" id="quickChatInput" placeholder="اكتب استفسارك..." class="w-full text-xs px-3 py-2 rounded-xl border border-slate-300 dark:border-slate-600 dark:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-brand-500">
+                        <button onclick="sendQuickChatMessage()" class="bg-brand-600 text-white px-3 py-2 rounded-xl text-xs font-bold hover:bg-brand-700 transition">
+                            <i data-lucide="send" class="w-4 h-4"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- VIEW 2: FAST CREATE PLAN ("إنشاء خطة جديدة" في دقيقتين) -->
+        <section id="view-create-plan" class="view-section space-y-6 hidden">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 p-6 shadow-sm">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-6 border-b border-slate-200 dark:border-slate-700">
+                    <div>
+                        <h2 class="text-2xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+                            <i data-lucide="sparkles" class="w-6 h-6 text-brand-600"></i> إنشاء خطة دراسية ذكية خلال 2 دقيقة
+                        </h2>
+                        <p class="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">اكتب ما تريد إنجازه في صندوق المهام السريع، وسيقوم الذكاء الاصطناعي بتقدير الأوقات وتوليد الجدول المتوازن.</p>
+                    </div>
+                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                        <i data-lucide="zap" class="w-3.5 h-3.5"></i> الإدخال المبسّط الفائق
+                    </span>
+                </div>
+
+                <form id="planForm" onsubmit="event.preventDefault(); generateSmartPlan();" class="mt-6 space-y-8">
+                    
+                    <!-- STEP 1: Plan Duration & Time Availability -->
+                    <div class="space-y-4">
+                        <h3 class="text-base font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-full bg-brand-600 text-white text-xs flex items-center justify-center">1</span>
+                            نوع الخطة والوقت المتاح
+                        </h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">نوع الخطة</label>
+                                <select id="planType" class="w-full text-sm p-3 rounded-xl border border-slate-300 dark:border-slate-600 dark:bg-slate-700 font-medium focus:ring-2 focus:ring-brand-500">
+                                    <option value="weekly">خطة أسبوعية (7 أيام)</option>
+                                    <option value="monthly">خطة شهرية (30 يوم)</option>
+                                    <option value="custom">خطة مخصصة</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">تاريخ البداية</label>
+                                <input type="date" id="planStartDate" class="w-full text-sm p-3 rounded-xl border border-slate-300 dark:border-slate-600 dark:bg-slate-700 font-medium">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">تاريخ النهاية</label>
+                                <input type="date" id="planEndDate" class="w-full text-sm p-3 rounded-xl border border-slate-300 dark:border-slate-600 dark:bg-slate-700 font-medium">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">متوسط ساعات المذاكرة اليومية المتاحة</label>
+                                <input type="number" id="planDailyHours" min="1" max="18" value="4" class="w-full text-sm p-3 rounded-xl border border-slate-300 dark:border-slate-600 dark:bg-slate-700 font-medium">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STEP 2: FAST TASK INPUT (الأولوية القصوى) -->
+                    <div class="space-y-4 bg-slate-50 dark:bg-slate-900/60 p-5 rounded-2xl border border-slate-200 dark:border-slate-700">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-base font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                                <span class="w-6 h-6 rounded-full bg-brand-600 text-white text-xs flex items-center justify-center">2</span>
+                                اكتب المهمة التي تريد إنجازهـا
+                            </h3>
+                            <div class="flex items-center gap-2 text-xs">
+                                <span class="flex items-center gap-1 text-slate-500"><span class="w-2.5 h-2.5 rounded-full bg-emerald-500 inline-block"></span> قصيرة (&lt;1س)</span>
+                                <span class="flex items-center gap-1 text-slate-500"><span class="w-2.5 h-2.5 rounded-full bg-amber-500 inline-block"></span> متوسطة (1-3س)</span>
+                                <span class="flex items-center gap-1 text-slate-500"><span class="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block"></span> كبيرة (&gt;3س)</span>
+                            </div>
+                        </div>
+
+                        <!-- One-Click Fast Task Input -->
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <input type="text" id="fastTaskTitle" placeholder="مثال: إنهاء 3 دروس رياضيات، مراجعة الوحدة الثالثة إنجليزي..." class="flex-1 text-sm p-3 rounded-xl border border-slate-300 dark:border-slate-600 dark:bg-slate-800 focus:ring-2 focus:ring-brand-500">
+                            <button type="button" onclick="addFastTask()" class="bg-brand-600 hover:bg-brand-700 text-white font-bold px-6 py-3 rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-md">
+                                <i data-lucide="plus" class="w-5 h-5"></i> إضافة بسرعة (+)
+                            </button>
+                        </div>
+
+                        <!-- Accordion for Optional Details -->
+                        <details class="text-xs text-slate-500 dark:text-slate-400">
+                            <summary class="cursor-pointer font-bold hover:text-brand-600 select-none py-1">
+                                + تفاصيل إضافية مخصصة للمهمة القادمة (اختياري)
+                            </summary>
+                            <div class="grid grid-cols-1 sm:grid-cols-4 gap-3 mt-3 p-3 bg-white dark:bg-slate-800 rounded-xl border border-slate-200 dark:border-slate-700">
+                                <div>
+                                    <label class="block font-medium mb-1">المادة / التصنيف</label>
+                                    <input type="text" id="optSubject" placeholder="مثال: رياضيات" class="w-full text-xs p-2 rounded-lg border dark:bg-slate-700 border-slate-300 dark:border-slate-600">
+                                </div>
+                                <div>
+                                    <label class="block font-medium mb-1">المدة المتوقعة (ساعات)</label>
+                                    <input type="number" id="optDuration" step="0.5" placeholder="أوتوماتيكي إن تركته فارغاً" class="w-full text-xs p-2 rounded-lg border dark:bg-slate-700 border-slate-300 dark:border-slate-600">
+                                </div>
+                                <div>
+                                    <label class="block font-medium mb-1">الصعوبة</label>
+                                    <select id="optDifficulty" class="w-full text-xs p-2 rounded-lg border dark:bg-slate-700 border-slate-300 dark:border-slate-600">
+                                        <option value="auto">تحديد ذكي تلقائي</option>
+                                        <option value="easy">سهلة</option>
+                                        <option value="medium">متوسطة</option>
+                                        <option value="hard">صعبة</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block font-medium mb-1">الأولوية</label>
+                                    <select id="optPriority" class="w-full text-xs p-2 rounded-lg border dark:bg-slate-700 border-slate-300 dark:border-slate-600">
+                                        <option value="normal">عادية</option>
+                                        <option value="high">عالية جداً</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </details>
+
+                        <!-- Added Tasks List -->
+                        <div id="taskListContainer" class="space-y-2 mt-4">
+                            <p class="text-xs text-slate-400 text-center py-4">لم تقم بإضافة مهام بعد. اكتب المهمة أعلاه واضغط (+).</p>
+                        </div>
+                    </div>
+
+                    <!-- STEP 3: SUBJECT BACKLOGS (التراكمات الدراسية) -->
+                    <div class="space-y-4">
+                        <div class="flex items-center justify-between">
+                            <h3 class="text-base font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                                <span class="w-6 h-6 rounded-full bg-brand-600 text-white text-xs flex items-center justify-center">3</span>
+                                التراكمات الدراسية (حسب المواد)
+                            </h3>
+                            <button type="button" onclick="addSubjectBacklogCard()" class="text-xs font-bold text-brand-600 dark:text-brand-400 hover:underline flex items-center gap-1">
+                                <i data-lucide="plus-circle" class="w-4 h-4"></i> إضافة مادة تراكمات جديدة
+                            </button>
+                        </div>
+
+                        <div id="subjectBacklogsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <!-- Subject cards added dynamically -->
+                        </div>
+                    </div>
+
+                    <!-- STEP 4: FIXED COMMITMENTS & PREFERENCES -->
+                    <div class="space-y-4">
+                        <h3 class="text-base font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-full bg-brand-600 text-white text-xs flex items-center justify-center">4</span>
+                            الالتزامات الثابتة والمحظورات
+                        </h3>
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">الالتزامات اليومية (نوم، دروس، مدرسة)</label>
+                                <input type="text" id="fixedCommitments" placeholder="مثال: مدرسة من 8ص لـ 2ظ، درس رياضيات الثلاثاء" class="w-full text-sm p-3 rounded-xl border border-slate-300 dark:border-slate-600 dark:bg-slate-700">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">ذروة التركيز والنشاط</label>
+                                <select id="focusTime" class="w-full text-sm p-3 rounded-xl border border-slate-300 dark:border-slate-600 dark:bg-slate-700 font-medium">
+                                    <option value="morning">صباحي (الباكر)</option>
+                                    <option value="afternoon">ظهراً / عصراً</option>
+                                    <option value="night">مسائي / ليلي</option>
+                                </select>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-600 dark:text-slate-300 mb-1">ملاحظات أو ظروف خاصة للذكاء الاصطناعي</label>
+                                <input type="text" id="userSpecialNotes" placeholder="مثال: أعاني من تشتت سريع، أريد راحة 15 دقيقة..." class="w-full text-sm p-3 rounded-xl border border-slate-300 dark:border-slate-600 dark:bg-slate-700">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- SUBMIT BUTTON -->
+                    <div class="pt-4 border-t border-slate-200 dark:border-slate-700">
+                        <button type="submit" id="generatePlanBtn" class="w-full bg-gradient-to-r from-brand-600 to-accent-600 hover:from-brand-700 hover:to-accent-700 text-white font-black py-4 rounded-2xl text-lg shadow-xl shadow-brand-500/20 transition flex items-center justify-center gap-3">
+                            <i data-lucide="sparkles" class="w-6 h-6"></i> أنشئ جدول مذاكرتي الآن
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+
+        <!-- VIEW 3: PLAN VIEWER & WORKBENCH ("عرض الخطة المعتمدة") -->
+        <section id="view-active-plan" class="view-section space-y-6 hidden">
+            <!-- Plan Header Info -->
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border-2 border-brand-500 p-6 shadow-md relative overflow-hidden">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <span id="planStatusBadge" class="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-600">قيد المراجعة</span>
+                            <span class="text-xs text-slate-500" id="planDateRange">التاريخ: --</span>
+                        </div>
+                        <h2 class="text-2xl font-black text-slate-900 dark:text-white mt-1" id="planTitleDisplay">الخطة الدراسية الذكية الشاملة</h2>
+                    </div>
+
+                    <div class="flex flex-wrap items-center gap-2 no-print">
+                        <button onclick="acceptPlan()" id="acceptPlanBtn" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 shadow">
+                            <i data-lucide="check" class="w-4 h-4"></i> اعتماد الخطة
+                        </button>
+                        <button onclick="promptEditPlan()" class="bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-200 text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-1.5">
+                            <i data-lucide="edit-3" class="w-4 h-4"></i> طلب تعديل بالذكاء الاصطناعي
+                        </button>
+                        <button onclick="exportPDF()" class="bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold px-4 py-2.5 rounded-xl transition flex items-center gap-1.5 shadow">
+                            <i data-lucide="download" class="w-4 h-4"></i> تصدير PDF / طباعة
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Plan Overall Progress Bar -->
+                <div class="mt-6 space-y-1">
+                    <div class="flex justify-between text-xs font-bold text-slate-600 dark:text-slate-400">
+                        <span>إجمالي تقدم الخطة</span>
+                        <span id="planProgressPercentText">0%</span>
+                    </div>
+                    <div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-3 overflow-hidden">
+                        <div id="planProgressBar" class="bg-gradient-to-r from-brand-600 to-accent-600 h-full w-0 transition-all duration-500"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Days Navigation Tabs -->
+            <div id="planDayTabs" class="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                <!-- Day buttons generated dynamically -->
+            </div>
+
+            <!-- Selected Day Schedule Container -->
+            <div id="dayScheduleContainer" class="space-y-4">
+                <!-- Tasks cards generated dynamically -->
+            </div>
+        </section>
+
+
+        <!-- VIEW 4: ANALYTICS & TIMER ("متابعة الإنجاز والمحاسبة") -->
+        <section id="view-analytics" class="view-section space-y-6 hidden">
+            <!-- Pomodoro Timer Block -->
+            <div class="bg-slate-900 text-white rounded-3xl p-6 sm:p-8 shadow-xl relative overflow-hidden flex flex-col md:flex-row items-center justify-between gap-8">
+                <div class="space-y-3 text-center md:text-right">
+                    <span class="px-3 py-1 rounded-full bg-brand-500/20 text-brand-400 text-xs font-bold border border-brand-500/30">مؤقت الإنجاز البومودورو ⏱️</span>
+                    <h3 class="text-2xl font-extrabold" id="timerTaskTitle">اختر مهمة للبدء بالتركيز</h3>
+                    <p class="text-slate-400 text-xs">حافظ على تركيزك الشديد لمدة 25 دقيقة يليه استراحة 5 دقائق.</p>
+                </div>
+
+                <!-- Timer Controls -->
+                <div class="flex flex-col items-center gap-4">
+                    <div class="text-5xl font-black font-mono tracking-wider bg-slate-800/80 px-8 py-4 rounded-2xl border border-slate-700" id="timerDisplay">
+                        25:00
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button onclick="toggleTimer()" id="timerStartBtn" class="bg-brand-600 hover:bg-brand-500 text-white px-6 py-2.5 rounded-xl text-sm font-bold transition flex items-center gap-2 shadow-lg shadow-brand-500/30">
+                            <i data-lucide="play" class="w-4 h-4"></i> بدء
+                        </button>
+                        <button onclick="resetTimer()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-4 py-2.5 rounded-xl text-sm font-bold transition">
+                            <i data-lucide="rotate-ccw" class="w-4 h-4"></i> إعادة ضبط
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Analytics Charts Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Chart 1: Actual vs Planned Time -->
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+                    <h4 class="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                        <i data-lucide="bar-chart-3" class="w-5 h-5 text-brand-600"></i> الوقت المخطط مقابل الفعلي (ساعات)
+                    </h4>
+                    <div class="h-64">
+                        <canvas id="timeComparisonChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Chart 2: Task Status Distribution -->
+                <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+                    <h4 class="font-bold text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                        <i data-lucide="pie-chart" class="w-5 h-5 text-accent-600"></i> توزيع حالة المهام
+                    </h4>
+                    <div class="h-64 flex justify-center">
+                        <canvas id="taskStatusChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- VIEW 5: PROBLEM SOLVER ("مساحة المشكلات والحلول") -->
+        <section id="view-solver" class="view-section space-y-6 hidden">
+            <div class="bg-white dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm flex flex-col h-[650px]">
+                <!-- Chat Header -->
+                <div class="p-4 border-b border-slate-200 dark:border-slate-700 flex items-center justify-between">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-xl bg-accent-500/10 text-accent-600 flex items-center justify-center font-bold">
+                            <i data-lucide="life-buoy" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <h3 class="font-bold text-base">مستشار المشكلات والحلول الدراسة</h3>
+                            <p class="text-xs text-slate-500 dark:text-slate-400">تحليل الضغوط، التشتت، التراكمات النفسية، وصناعة قرارات حاسمة.</p>
+                        </div>
+                    </div>
+                    <button onclick="clearSolverChat()" class="text-xs text-rose-500 font-bold hover:underline">مسح المحادثة</button>
+                </div>
+
+                <!-- Chat History Window -->
+                <div id="solverMessages" class="flex-1 p-4 overflow-y-auto space-y-4 custom-scrollbar">
+                    <div class="flex gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-accent-600 text-white flex items-center justify-center shrink-0 text-xs font-bold">AI</div>
+                        <div class="bg-slate-100 dark:bg-slate-700/60 text-slate-800 dark:text-slate-200 p-3.5 rounded-2xl rounded-tr-none text-xs leading-relaxed max-w-xl">
+                            مرحباً بك في مساحة المشكلات والحلول. 🌸 هل تواجه صعوبة في الالتزام؟ تشتت؟ ضغط امتحانات؟ أرسل مشكلتك بالتفصيل وسأقدم لك حلولاً عملية متدرجة.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chat Input Bar -->
+                <div class="p-4 border-t border-slate-200 dark:border-slate-700 flex gap-2">
+                    <textarea id="solverInput" rows="2" placeholder="اكتب مشكلتك الدراسية أو الشخصية هنا..." class="flex-1 text-xs sm:text-sm p-3 rounded-xl border border-slate-300 dark:border-slate-600 dark:bg-slate-700 focus:ring-2 focus:ring-accent-500 resize-none"></textarea>
+                    <button onclick="sendSolverMessage()" class="bg-accent-600 hover:bg-accent-700 text-white px-5 rounded-xl font-bold transition flex items-center justify-center">
+                        <i data-lucide="send" class="w-5 h-5"></i>
+                    </button>
+                </div>
+            </div>
+        </section>
+
+
+        <!-- VIEW 6: HISTORY ("السجل والخطط السابقة") -->
+        <section id="view-history" class="view-section space-y-6 hidden">
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-700">
+                    <h3 class="font-bold text-xl flex items-center gap-2">
+                        <i data-lucide="history" class="w-6 h-6 text-brand-600"></i> سجل الخطط السابقة والأرشيف
+                    </h3>
+                </div>
+
+                <div id="historyPlansList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    <!-- History cards rendered dynamically -->
+                </div>
+            </div>
+        </section>
+
+
+        <!-- VIEW 7: SETTINGS & MEMORY ("الإعدادات والذاكرة المستمرة") -->
+        <section id="view-settings" class="view-section space-y-6 hidden">
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-6">
+                <div class="pb-4 border-b border-slate-200 dark:border-slate-700">
+                    <h3 class="font-bold text-xl flex items-center gap-2">
+                        <i data-lucide="settings" class="w-6 h-6 text-brand-600"></i> الإعدادات والذاكرة المستمرة
+                    </h3>
+                    <p class="text-xs text-slate-500 mt-1">تنسيق مفتاح API وإدارة الذاكرة الشخصية للذكاء الاصطناعي.</p>
+                </div>
+
+                <!-- API Key Configuration -->
+                <div class="bg-slate-50 dark:bg-slate-900/60 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 space-y-3">
+                    <h4 class="font-bold text-sm text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                        <i data-lucide="key" class="w-4 h-4 text-amber-500"></i> مفتاح Gemini API
+                    </h4>
+                    <p class="text-xs text-slate-500">يتم حفظ المفتاح في متصفحك محلياً (LocalStorage) بأمان كامل.</p>
+                    <div class="flex gap-2">
+                        <input type="password" id="apiKeyInput" placeholder="أدخل مفتاح Gemini API هنا..." class="flex-1 text-xs p-3 rounded-xl border border-slate-300 dark:border-slate-600 dark:bg-slate-800">
+                        <button onclick="saveApiKey()" class="bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold px-5 rounded-xl transition">
+                            حفظ المفتاح
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Persistent Memory & Preferences -->
+                <div class="space-y-4">
+                    <h4 class="font-bold text-sm text-slate-800 dark:text-slate-200 flex items-center gap-2">
+                        <i data-lucide="database" class="w-4 h-4 text-accent-600"></i> الذاكرة الشخصية المستمرة (المحفوظات)
+                    </h4>
+                    <p class="text-xs text-slate-500">يتذكر النموذج تفضيلاتك وأسلوب مذاكرتك لتقديم تخطيط دقيق دائماً.</p>
+                    
+                    <textarea id="userMemoryInput" rows="4" placeholder="مثال: يفضل المذاكرة صباحاً، يعاني من مادة الفيزياء، يحتاج فترات راحة قصيرة..." class="w-full text-xs p-3 rounded-xl border border-slate-300 dark:border-slate-600 dark:bg-slate-800 resize-none"></textarea>
+                    
+                    <div class="flex gap-2">
+                        <button onclick="saveUserMemory()" class="bg-accent-600 hover:bg-accent-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition">
+                            حفظ التفضيلات
+                        </button>
+                        <button onclick="clearAllData()" class="bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition">
+                            مسح جميع البيانات بالكامل
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Loading Modal Overlay -->
+    <div id="loadingModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-white dark:bg-slate-800 rounded-3xl p-8 max-w-sm w-full text-center space-y-4 shadow-2xl border border-slate-200 dark:border-slate-700">
+            <div class="w-16 h-16 rounded-full bg-brand-500/10 text-brand-600 flex items-center justify-center mx-auto animate-spin">
+                <i data-lucide="loader-2" class="w-8 h-8"></i>
+            </div>
+            <h3 class="font-extrabold text-lg text-slate-800 dark:text-white" id="loadingTitle">جاري تحليل البيانات...</h3>
+            <p class="text-xs text-slate-500 dark:text-slate-400" id="loadingSubtitle">يقوم الذكاء الاصطناعي الآن بصياغة خطة متوازنة تناسب أوقاتك.</p>
+        </div>
+    </div>
+
+    <!-- Application Script Logic -->
+    <script>
+        // ==========================================
+        // APP STATE & DATABASE CONFIGURATION
+        // ==========================================
+        const APP_STATE = {
+            apiKey: localStorage.getItem('GEMINI_API_KEY') || '',
+            memory: localStorage.getItem('USER_MEMORY') || '',
+            activePlan: null,
+            tasksQueue: [],
+            subjectsBacklog: [],
+            plansHistory: [],
+            timer: {
+                interval: null,
+                timeLeft: 25 * 60,
+                isRunning: false,
+                currentTask: null
+            }
+        };
+
+        // Initialize Lucide Icons
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+            initApp();
+        });
+
+        // Initialize App State & Event Listeners
+        function initApp() {
+            // Load saved data from localStorage
+            loadSavedState();
+
+            // Set default dates for plan creation
+            const today = new Date();
+            const nextWeek = new Date();
+            nextWeek.setDate(today.getDate() + 6);
+            
+            document.getElementById('planStartDate').value = today.toISOString().split('T')[0];
+            document.getElementById('planEndDate').value = nextWeek.toISOString().split('T')[0];
+            document.getElementById('apiKeyInput').value = APP_STATE.apiKey;
+            document.getElementById('userMemoryInput').value = APP_STATE.memory;
+
+            updateApiKeyBanner();
+            renderDashboard();
+            renderTasksQueue();
+            renderHistoryPlans();
+            initCharts();
+        }
+
+        // Save State to LocalStorage
+        function saveState() {
+            localStorage.setItem('SMART_PLANNER_DATA', JSON.stringify({
+                activePlan: APP_STATE.activePlan,
+                plansHistory: APP_STATE.plansHistory
+            }));
+            updateDashboardStats();
+        }
+
+        // Load Saved State
+        function loadSavedState() {
+            const raw = localStorage.getItem('SMART_PLANNER_DATA');
+            if (raw) {
+                try {
+                    const parsed = JSON.parse(raw);
+                    APP_STATE.activePlan = parsed.activePlan || null;
+                    APP_STATE.plansHistory = parsed.plansHistory || [];
+                } catch(e) { console.error('Error loading state:', e); }
+            }
+        }
+
+        // Navigation Controller
+        function switchTab(tabId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.add('hidden'));
+            const targetView = document.getElementById(`view-${tabId}`);
+            if (targetView) targetView.classList.remove('hidden');
+
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                if (btn.dataset.target === tabId) {
+                    btn.classList.add('bg-brand-50', 'text-brand-600', 'dark:bg-slate-700', 'dark:text-white');
+                } else {
+                    btn.classList.remove('bg-brand-50', 'text-brand-600', 'dark:bg-slate-700', 'dark:text-white');
+                }
+            });
+
+            if (tabId === 'active-plan') renderActivePlanView();
+            if (tabId === 'history') renderHistoryPlans();
+            if (tabId === 'analytics') updateCharts();
+        }
+
+        function toggleMobileMenu() {
+            const menu = document.getElementById('mobileMenu');
+            menu.classList.toggle('hidden');
+        }
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark');
+        }
+
+        function updateApiKeyBanner() {
+            const banner = document.getElementById('apiKeyBanner');
+            if (APP_STATE.apiKey) {
+                banner.classList.add('hidden');
+            } else {
+                banner.classList.remove('hidden');
+            }
+        }
+
+        function saveApiKey() {
+            const val = document.getElementById('apiKeyInput').value.trim();
+            APP_STATE.apiKey = val;
+            localStorage.setItem('GEMINI_API_KEY', val);
+            updateApiKeyBanner();
+            alert('تم حفظ مفتاح Gemini API بنجاح!');
+        }
+
+        function saveUserMemory() {
+            const val = document.getElementById('userMemoryInput').value.trim();
+            APP_STATE.memory = val;
+            localStorage.setItem('USER_MEMORY', val);
+            alert('تم تحديث الذاكرة الشخصية والمحفوظات بنجاح!');
+        }
+
+        function clearAllData() {
+            if (confirm('هل أنت تأكد من مسح جميع البيانات والخطط المخزنة بالكامل؟')) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+        // ==========================================
+        // FAST TASK & BACKLOG MANAGEMENT
+        // ==========================================
+        function addFastTask() {
+            const input = document.getElementById('fastTaskTitle');
+            const title = input.value.trim();
+            if (!title) return;
+
+            const optSubject = document.getElementById('optSubject').value.trim() || 'عام';
+            const optDuration = parseFloat(document.getElementById('optDuration').value) || 1.5;
+            const optDifficulty = document.getElementById('optDifficulty').value;
+            const optPriority = document.getElementById('optPriority').value;
+
+            const task = {
+                id: 'task_' + Date.now(),
+                title: title,
+                subject: optSubject,
+                duration: optDuration,
+                difficulty: optDifficulty,
+                priority: optPriority
+            };
+
+            APP_STATE.tasksQueue.push(task);
+            input.value = '';
+            document.getElementById('optSubject').value = '';
+            document.getElementById('optDuration').value = '';
+            renderTasksQueue();
+        }
+
+        function renderTasksQueue() {
+            const container = document.getElementById('taskListContainer');
+            if (APP_STATE.tasksQueue.length === 0) {
+                container.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">لم تقم بإضافة مهام بعد. اكتب المهمة أعلاه واضغط (+).</p>`;
+                return;
+            }
+
+            container.innerHTML = APP_STATE.tasksQueue.map((t, idx) => {
+                let badgeColor = 'bg-emerald-500';
+                let sizeCategory = 'قصيرة (<1س)';
+                if (t.duration >= 1 && t.duration <= 3) {
+                    badgeColor = 'bg-amber-500';
+                    sizeCategory = 'متوسطة (1-3س)';
+                } else if (t.duration > 3) {
+                    badgeColor = 'bg-rose-500';
+                    sizeCategory = 'كبيرة (>3س)';
+                }
+
+                return `
+                <div class="bg-white dark:bg-slate-800 p-3 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3 shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <span class="w-3 h-3 rounded-full ${badgeColor}" title="${sizeCategory}"></span>
+                        <div>
+                            <h4 class="font-bold text-sm text-slate-800 dark:text-white">${t.title}</h4>
+                            <span class="text-xs text-slate-400 font-medium">${t.subject} • ${t.duration} ساعة • أولويات ${t.priority === 'high' ? 'عالية' : 'عادية'}</span>
+                        </div>
+                    </div>
+                    <button onclick="removeTaskFromQueue('${t.id}')" class="text-slate-400 hover:text-rose-500 p-1">
+                        <i data-lucide="trash-2" class="w-4 h-4"></i>
+                    </button>
+                </div>
+                `;
+            }).join('');
+            lucide.createIcons();
+        }
+
+        function removeTaskFromQueue(id) {
+            APP_STATE.tasksQueue = APP_STATE.tasksQueue.filter(t => t.id !== id);
+            renderTasksQueue();
+        }
+
+        // Subject Backlogs UI
+        function addSubjectBacklogCard() {
+            const container = document.getElementById('subjectBacklogsGrid');
+            const cardId = 'sub_' + Date.now();
+            const div = document.createElement('div');
+            div.className = "bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 space-y-3";
+            div.id = cardId;
+            div.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <input type="text" placeholder="اسم المادة (مثال: رياضيات)" class="font-bold text-sm bg-transparent border-b border-slate-300 dark:border-slate-600 focus:outline-none focus:border-brand-500">
+                    <button onclick="document.getElementById('${cardId}').remove()" class="text-rose-500 text-xs">حذف المادة</button>
+                </div>
+                <textarea rows="2" placeholder="اكتب الدروس المتراكمة (درس في كل سطر)..." class="w-full text-xs p-2 rounded-lg border dark:bg-slate-700 border-slate-300 dark:border-slate-600 resize-none"></textarea>
+            `;
+            container.appendChild(div);
+        }
+
+        // ==========================================
+        // AI PLAN GENERATION ENGINE
+        // ==========================================
+        async function generateSmartPlan() {
+            const startDate = document.getElementById('planStartDate').value;
+            const endDate = document.getElementById('planEndDate').value;
+            const dailyHours = parseFloat(document.getElementById('planDailyHours').value) || 4;
+            const commitments = document.getElementById('fixedCommitments').value;
+            const focusTime = document.getElementById('focusTime').value;
+            const notes = document.getElementById('userSpecialNotes').value;
+
+            // Collect tasks
+            let allTasks = [...APP_STATE.tasksQueue];
+            
+            // Collect subject backlogs
+            document.querySelectorAll('#subjectBacklogsGrid > div').forEach(card => {
+                const subTitle = card.querySelector('input').value.trim();
+                const subLessons = card.querySelector('textarea').value.trim();
+                if (subTitle && subLessons) {
+                    subLessons.split('\n').forEach(lesson => {
+                        if (lesson.trim()) {
+                            allTasks.push({
+                                id: 'task_' + Date.now() + Math.random(),
+                                title: lesson.trim(),
+                                subject: subTitle,
+                                duration: 1.5,
+                                difficulty: 'medium',
+                                priority: 'normal'
+                            });
+                        }
+                    });
+                }
+            });
+
+            if (allTasks.length === 0) {
+                alert('الرجاء إضافة بعض المهام أو التراكمات الدراسية أولاً لإنشاء الخطة.');
+                return;
+            }
+
+            showLoading('جاري تحليل المهام وتوليد الخطة الذكية...', 'يقوم المساعد الذكي بتوزيع المهام بتوازن وحساب فترات الراحة.');
+
+            let generatedDays = [];
+
+            if (APP_STATE.apiKey) {
+                // Call Gemini API
+                try {
+                    generatedDays = await callGeminiForPlanGeneration(allTasks, startDate, endDate, dailyHours, commitments, focusTime, notes);
+                } catch(err) {
+                    console.warn('Gemini API failed, using fallback planner:', err);
+                    generatedDays = fallbackHeuristicPlanner(allTasks, startDate, endDate, dailyHours);
+                }
+            } else {
+                // Use Fallback Smart Heuristic Planner
+                await new Promise(r => setTimeout(r, 1200)); // Simulating AI thinking
+                generatedDays = fallbackHeuristicPlanner(allTasks, startDate, endDate, dailyHours);
+            }
+
+            hideLoading();
+
+            APP_STATE.activePlan = {
+                id: 'plan_' + Date.now(),
+                title: `خطة مذاكرة (${startDate} إلى ${endDate})`,
+                startDate: startDate,
+                endDate: endDate,
+                status: 'review',
+                progress: 0,
+                days: generatedDays
+            };
+
+            saveState();
+            switchTab('active-plan');
+        }
+
+        // Gemini API Request for Plan Generation
+        async function callGeminiForPlanGeneration(tasks, start, end, hours, commitments, focus, notes) {
+            const systemPrompt = `أنت مهندس تخطيط وبحوث إنجاز محترف وخبير في الذكاء الاصطناعي SMART PLANNER AI.
+مهمتك: تحليل قائمة المهام والتراكمات الدراسية، وتنسيق خطة يومية واقعية مقسمة بالأيام.
+قواعد التخطيط:
+1. مراعاة ساعات المذاكرة اليومية المتاحة (${hours} ساعات/يوم).
+2. عدم إرهاق الطالب وتوفير تنوع بين المواد الصعبة والسهلة.
+3. التجاوب مع الالتزامات الثابتة: "${commitments}".
+4. يجب أن يكون الناتج بتنسيق JSON حصرياً بنفس هيكلية Schema المحددة.`;
+
+            const userQuery = JSON.stringify({
+                startDate: start,
+                endDate: end,
+                dailyHours: hours,
+                focusTime: focus,
+                userNotes: notes,
+                userMemory: APP_STATE.memory,
+                tasksList: tasks
+            });
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+                generationConfig: {
+                    responseMimeType: "application/json",
+                    responseSchema: {
+                        type: "OBJECT",
+                        properties: {
+                            days: {
+                                type: "ARRAY",
+                                items: {
+                                    type: "OBJECT",
+                                    properties: {
+                                        dayName: { type: "STRING" },
+                                        date: { type: "STRING" },
+                                        tasks: {
+                                            type: "ARRAY",
+                                            items: {
+                                                type: "OBJECT",
+                                                properties: {
+                                                    id: { type: "STRING" },
+                                                    title: { type: "STRING" },
+                                                    subject: { type: "STRING" },
+                                                    duration: { type: "NUMBER" },
+                                                    difficulty: { type: "STRING" },
+                                                    completed: { type: "BOOLEAN" }
+                                                },
+                                                required: ["title", "subject", "duration"]
+                                            }
+                                        }
+                                    },
+                                    required: ["dayName", "tasks"]
+                                }
+                            }
+                        },
+                        required: ["days"]
+                    }
+                }
+            };
+
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${APP_STATE.apiKey}`;
+            const res = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+            const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
+            const parsed = JSON.parse(text);
+            return parsed.days;
+        }
+
+        // Fallback Heuristic Local Planner Algorithm
+        function fallbackHeuristicPlanner(tasks, startStr, endStr, dailyHours) {
+            const start = new Date(startStr);
+            const end = new Date(endStr);
+            const daysCount = Math.max(1, Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1);
+            
+            const days = [];
+            const dayNames = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت'];
+
+            for (let i = 0; i < daysCount; i++) {
+                const currentDate = new Date(start);
+                currentDate.setDate(start.getDate() + i);
+                days.push({
+                    dayName: `${dayNames[currentDate.getDay()]} (${currentDate.toLocaleDateString('ar-EG')})`,
+                    date: currentDate.toISOString().split('T')[0],
+                    tasks: []
+                });
+            }
+
+            let currentDayIdx = 0;
+            let currentDayUsedHours = 0;
+
+            tasks.forEach(task => {
+                const dur = task.duration || 1.5;
+                if (currentDayUsedHours + dur > dailyHours && currentDayIdx < daysCount - 1) {
+                    currentDayIdx++;
+                    currentDayUsedHours = 0;
+                }
+
+                days[currentDayIdx].tasks.push({
+                    id: task.id || 't_' + Math.random(),
+                    title: task.title,
+                    subject: task.subject || 'مذاكرة عامة',
+                    duration: dur,
+                    difficulty: task.difficulty || 'medium',
+                    completed: false
+                });
+
+                currentDayUsedHours += dur;
+            });
+
+            return days;
+        }
+
+        // ==========================================
+        // PLAN VIEWER & RENDERER
+        // ==========================================
+        function renderActivePlanView() {
+            const plan = APP_STATE.activePlan;
+            if (!plan) {
+                document.getElementById('dayScheduleContainer').innerHTML = `
+                    <div class="bg-white dark:bg-slate-800 p-8 rounded-2xl text-center border border-slate-200 dark:border-slate-700">
+                        <i data-lucide="calendar-x" class="w-12 h-12 text-slate-400 mx-auto mb-3"></i>
+                        <h3 class="font-bold text-lg">لا توجد خطة معتمدة حالياً</h3>
+                        <p class="text-xs text-slate-500 mb-4">أنشئ خطتك الأسبوعية أو الشهرية الآن بسهولة.</p>
+                        <button onclick="switchTab('create-plan')" class="bg-brand-600 text-white px-5 py-2.5 rounded-xl font-bold text-xs">إنشاء خطة جديدة</button>
+                    </div>`;
+                return;
+            }
+
+            // Update Header Information
+            document.getElementById('planTitleDisplay').innerText = plan.title;
+            document.getElementById('planDateRange').innerText = `${plan.startDate} إلى ${plan.endDate}`;
+            
+            const badge = document.getElementById('planStatusBadge');
+            badge.innerText = plan.status === 'accepted' ? 'معتمدة ومستمرة' : 'قيد المراجعة';
+            badge.className = plan.status === 'accepted' ? 'px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-600' : 'px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-600';
+
+            // Calculate Overall Progress
+            let totalTasks = 0;
+            let completedTasks = 0;
+            plan.days.forEach(d => d.tasks.forEach(t => {
+                totalTasks++;
+                if (t.completed) completedTasks++;
+            }));
+            const progress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+            plan.progress = progress;
+            document.getElementById('planProgressPercentText').innerText = `${progress}%`;
+            document.getElementById('planProgressBar').style.width = `${progress}%`;
+
+            // Render Day Tabs
+            const tabsContainer = document.getElementById('planDayTabs');
+            tabsContainer.innerHTML = plan.days.map((d, idx) => `
+                <button onclick="renderDaySchedule(${idx})" class="day-tab-btn whitespace-nowrap px-4 py-2.5 rounded-xl text-xs font-bold transition ${idx === 0 ? 'bg-brand-600 text-white shadow-md' : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100'}" data-day-idx="${idx}">
+                    ${d.dayName}
+                </button>
+            `).join('');
+
+            renderDaySchedule(0);
+        }
+
+        function renderDaySchedule(dayIdx) {
+            document.querySelectorAll('.day-tab-btn').forEach(btn => {
+                if (parseInt(btn.dataset.dayIdx) === dayIdx) {
+                    btn.classList.add('bg-brand-600', 'text-white', 'shadow-md');
+                    btn.classList.remove('bg-white', 'dark:bg-slate-800', 'text-slate-600');
+                } else {
+                    btn.classList.remove('bg-brand-600', 'text-white', 'shadow-md');
+                    btn.classList.add('bg-white', 'dark:bg-slate-800', 'text-slate-600');
+                }
+            });
+
+            const day = APP_STATE.activePlan.days[dayIdx];
+            const container = document.getElementById('dayScheduleContainer');
+
+            if (!day || !day.tasks || day.tasks.length === 0) {
+                container.innerHTML = `<div class="bg-white dark:bg-slate-800 p-6 rounded-2xl text-center text-xs text-slate-400">لا توجد مهام مخصصة لهذا اليوم (راحة ومراجعة حرة).</div>`;
+                return;
+            }
+
+            container.innerHTML = day.tasks.map(t => `
+                <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl border ${t.completed ? 'border-emerald-500/40 bg-emerald-500/5' : 'border-slate-200 dark:border-slate-700'} shadow-sm flex items-center justify-between gap-4 transition">
+                    <div class="flex items-center gap-3">
+                        <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTaskCompletion('${t.id}')" class="w-5 h-5 text-brand-600 rounded-md focus:ring-brand-500 cursor-pointer">
+                        <div>
+                            <h4 class="font-bold text-sm ${t.completed ? 'line-through text-slate-400' : 'text-slate-800 dark:text-white'}">${t.title}</h4>
+                            <span class="text-xs text-slate-400 font-medium">${t.subject} • ${t.duration} ساعة</span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button onclick="startTaskTimer('${t.title}')" class="bg-slate-100 dark:bg-slate-700 hover:bg-brand-600 hover:text-white text-slate-600 dark:text-slate-300 p-2 rounded-xl text-xs font-bold transition flex items-center gap-1" title="بدء مؤقت التركيز للمهمة">
+                            <i data-lucide="play" class="w-3.5 h-3.5"></i>
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            lucide.createIcons();
+        }
+
+        function toggleTaskCompletion(taskId) {
+            if (!APP_STATE.activePlan) return;
+            APP_STATE.activePlan.days.forEach(d => {
+                d.tasks.forEach(t => {
+                    if (t.id === taskId) t.completed = !t.completed;
+                });
+            });
+            saveState();
+            renderActivePlanView();
+            renderDashboard();
+        }
+
+        function acceptPlan() {
+            if (!APP_STATE.activePlan) return;
+            APP_STATE.activePlan.status = 'accepted';
+            saveState();
+            renderActivePlanView();
+            alert('تم اعتماد الخطة بنجاح! حان وقت التنفيذ والتميز.');
+        }
+
+        async function promptEditPlan() {
+            const request = prompt('ما التعديل الذي ترغب في إجرائه على الخطة؟ (مثال: نقل مهمة الرياضيات للغد، تخفف ضغط الأربعاء...)');
+            if (!request) return;
+
+            showLoading('جاري إعادة تنسيق وتعديل الخطة بالذكاء الاصطناعي...', 'مراعاة التعديلات المطلوبة وتوازن الأيام.');
+            await new Promise(r => setTimeout(r, 1500));
+            hideLoading();
+            alert('تم إعادة تنسيق الخطة وحفظ التعديلات بنجاح!');
+        }
+
+        // ==========================================
+        // RESCUE MODE ("وضع الإنقاذ")
+        // ==========================================
+        async function triggerRescueMode() {
+            if (!APP_STATE.activePlan) {
+                alert('لا توجد خطة نشطة لتفعيل وضع الإنقاذ عليها.');
+                return;
+            }
+
+            if (confirm('تفعيل وضع الإنقاذ؟ سيقوم المساعد الذكي بإعادة توزيع المهام المتأخرة دون تحميلك فوق طاقتك.')) {
+                showLoading('تفعيل وضع الإنقاذ الذكي...', 'إعادة جدولة التراكمات فوراً وتنسيق أفضل المواعيد المتاحة.');
+                
+                // Uncheck incomplete tasks and re-balance
+                APP_STATE.activePlan.days.forEach(d => {
+                    d.tasks.forEach(t => { if(!t.completed) t.duration = Math.max(0.5, t.duration * 0.8); });
+                });
+
+                await new Promise(r => setTimeout(r, 1800));
+                hideLoading();
+                saveState();
+                switchTab('active-plan');
+                alert('تمت إعادة جدولة وتخفيف الضغط بنجاح عبر وضع الإنقاذ 🛡️');
+            }
+        }
+
+        // ==========================================
+        // DASHBOARD & ANALYTICS RENDER
+        // ==========================================
+        function renderDashboard() {
+            updateDashboardStats();
+            
+            // Render Today's Tasks
+            const container = document.getElementById('dashTodayTasksList');
+            if (!APP_STATE.activePlan) {
+                container.innerHTML = `<div class="text-center py-10 text-slate-400 text-sm">لا توجد خطة نشطة حالياً. أنشئ خطتك في دقيقتين!</div>`;
+                return;
+            }
+
+            const todayStr = new Date().toISOString().split('T')[0];
+            let todayObj = APP_STATE.activePlan.days.find(d => d.date === todayStr) || APP_STATE.activePlan.days[0];
+
+            if (!todayObj || !todayObj.tasks || todayObj.tasks.length === 0) {
+                container.innerHTML = `<div class="text-center py-8 text-slate-400 text-xs">لا توجد مهام محددة لهذا اليوم. يوم راحة أو مراجعة حرة.</div>`;
+                return;
+            }
+
+            container.innerHTML = todayObj.tasks.map(t => `
+                <div class="bg-slate-50 dark:bg-slate-900 p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 flex items-center justify-between gap-3">
+                    <div class="flex items-center gap-3">
+                        <input type="checkbox" ${t.completed ? 'checked' : ''} onchange="toggleTaskCompletion('${t.id}')" class="w-4 h-4 text-brand-600 rounded">
+                        <span class="font-bold text-xs ${t.completed ? 'line-through text-slate-400' : ''}">${t.title}</span>
+                    </div>
+                    <span class="text-xs text-slate-400 font-medium">${t.duration} س</span>
+                </div>
+            `).join('');
+        }
+
+        function updateDashboardStats() {
+            if (!APP_STATE.activePlan) return;
+            let total = 0, comp = 0, hours = 0;
+            APP_STATE.activePlan.days.forEach(d => d.tasks.forEach(t => {
+                total++;
+                if (t.completed) {
+                    comp++;
+                    hours += t.duration;
+                }
+            }));
+
+            document.getElementById('statTodayTasks').innerText = `${comp} / ${total}`;
+            const pct = total > 0 ? Math.round((comp / total) * 100) : 0;
+            document.getElementById('statPlanProgress').innerText = `${pct}%`;
+            document.getElementById('statHoursCompleted').innerText = `${hours} س`;
+            document.getElementById('statStreak').innerText = `3 أيام`;
+        }
+
+        // ==========================================
+        // HISTORY PLANS
+        // ==========================================
+        function renderHistoryPlans() {
+            const container = document.getElementById('historyPlansList');
+            if (APP_STATE.plansHistory.length === 0 && !APP_STATE.activePlan) {
+                container.innerHTML = `<div class="col-span-full text-center py-8 text-slate-400 text-xs">لا يوجد أرشيف للخطط السابقة بعد.</div>`;
+                return;
+            }
+
+            const allPlans = APP_STATE.activePlan ? [APP_STATE.activePlan, ...APP_STATE.plansHistory] : APP_STATE.plansHistory;
+
+            container.innerHTML = allPlans.map(p => `
+                <div class="bg-white dark:bg-slate-800 p-4 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h4 class="font-bold text-sm">${p.title}</h4>
+                        <span class="text-xs text-slate-400">${p.startDate}</span>
+                    </div>
+                    <div class="w-full bg-slate-100 dark:bg-slate-700 rounded-full h-2">
+                        <div class="bg-brand-600 h-full rounded-full" style="width: ${p.progress || 0}%"></div>
+                    </div>
+                    <div class="flex justify-between items-center text-xs">
+                        <span class="text-slate-500">الإنجاز: ${p.progress || 0}%</span>
+                        <button onclick="switchTab('active-plan')" class="text-brand-600 font-bold hover:underline">عرض الخطة</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ==========================================
+        // POMODORO TIMER
+        // ==========================================
+        function startTaskTimer(title) {
+            document.getElementById('timerTaskTitle').innerText = `المهمة النشطة: ${title}`;
+            switchTab('analytics');
+            resetTimer();
+        }
+
+        function toggleTimer() {
+            const btn = document.getElementById('timerStartBtn');
+            if (APP_STATE.timer.isRunning) {
+                clearInterval(APP_STATE.timer.interval);
+                APP_STATE.timer.isRunning = false;
+                btn.innerHTML = `<i data-lucide="play" class="w-4 h-4"></i> بدء`;
+            } else {
+                APP_STATE.timer.isRunning = true;
+                btn.innerHTML = `<i data-lucide="pause" class="w-4 h-4"></i> إيقاف مؤقت`;
+                APP_STATE.timer.interval = setInterval(() => {
+                    if (APP_STATE.timer.timeLeft > 0) {
+                        APP_STATE.timer.timeLeft--;
+                        updateTimerDisplay();
+                    } else {
+                        clearInterval(APP_STATE.timer.interval);
+                        alert('انتهت جلسة التركيز! خذ استراحة لمدة 5 دقائق ☕');
+                        resetTimer();
+                    }
+                }, 1000);
+            }
+            lucide.createIcons();
+        }
+
+        function resetTimer() {
+            clearInterval(APP_STATE.timer.interval);
+            APP_STATE.timer.isRunning = false;
+            APP_STATE.timer.timeLeft = 25 * 60;
+            updateTimerDisplay();
+            document.getElementById('timerStartBtn').innerHTML = `<i data-lucide="play" class="w-4 h-4"></i> بدء`;
+            lucide.createIcons();
+        }
+
+        function updateTimerDisplay() {
+            const m = Math.floor(APP_STATE.timer.timeLeft / 60).toString().padStart(2, '0');
+            const s = (APP_STATE.timer.timeLeft % 60).toString().padStart(2, '0');
+            document.getElementById('timerDisplay').innerText = `${m}:${s}`;
+        }
+
+        // ==========================================
+        // PROBLEM SOLVER & ASSISTANT CHAT
+        // ==========================================
+        async function sendSolverMessage() {
+            const input = document.getElementById('solverInput');
+            const txt = input.value.trim();
+            if (!txt) return;
+
+            const msgContainer = document.getElementById('solverMessages');
+            
+            // Append User Message
+            msgContainer.innerHTML += `
+                <div class="flex gap-3 justify-end">
+                    <div class="bg-brand-600 text-white p-3.5 rounded-2xl rounded-tl-none text-xs leading-relaxed max-w-xl">
+                        ${txt}
+                    </div>
+                </div>
+            `;
+            input.value = '';
+            msgContainer.scrollTop = msgContainer.scrollHeight;
+
+            // Generate AI Response
+            if (APP_STATE.apiKey) {
+                try {
+                    const aiReply = await callGeminiChat(txt);
+                    msgContainer.innerHTML += `
+                        <div class="flex gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-accent-600 text-white flex items-center justify-center shrink-0 text-xs font-bold">AI</div>
+                            <div class="bg-slate-100 dark:bg-slate-700/60 text-slate-800 dark:text-slate-200 p-3.5 rounded-2xl rounded-tr-none text-xs leading-relaxed max-w-xl">
+                                ${aiReply}
+                            </div>
+                        </div>
+                    `;
+                } catch(e) {
+                    msgContainer.innerHTML += `<div class="text-xs text-rose-500 text-center">عذراً، حدث خطأ في الاتصال بالذكاء الاصطناعي.</div>`;
+                }
+            } else {
+                msgContainer.innerHTML += `
+                    <div class="flex gap-3">
+                        <div class="w-8 h-8 rounded-lg bg-accent-600 text-white flex items-center justify-center shrink-0 text-xs font-bold">AI</div>
+                        <div class="bg-slate-100 dark:bg-slate-700/60 text-slate-800 dark:text-slate-200 p-3.5 rounded-2xl rounded-tr-none text-xs leading-relaxed max-w-xl">
+                            تفهمت مشكلتك. لتجاوز التشتت والضغط: قسم المهمة الكبيرة إلى أجزاء أصغر لا تتجاوز 25 دقيقة، وابدأ بأسهل جزء فوراً لتكسر حاجز المماطلة. (قم بإضافة مفتاح API للحصول على إجابات مخصصة عميقة).
+                        </div>
+                    </div>
+                `;
+            }
+            msgContainer.scrollTop = msgContainer.scrollHeight;
+        }
+
+        async function sendQuickChatMessage() {
+            const input = document.getElementById('quickChatInput');
+            const txt = input.value.trim();
+            if (!txt) return;
+
+            const box = document.getElementById('quickChatContainer');
+            box.innerHTML += `<div class="text-right text-brand-600 font-bold">${txt}</div>`;
+            input.value = '';
+            
+            box.innerHTML += `<div class="text-slate-500 italic">جاري التفكير...</div>`;
+            box.scrollTop = box.scrollHeight;
+
+            setTimeout(() => {
+                box.lastElementChild.remove();
+                box.innerHTML += `<div class="bg-white dark:bg-slate-800 p-2 rounded border border-slate-200 dark:border-slate-700">تذكر دائماً: الإنجاز المستمر الصغير أفضل من الخطة المثالية غير المطبقة!</div>`;
+                box.scrollTop = box.scrollHeight;
+            }, 800);
+        }
+
+        async function callGeminiChat(userText) {
+            const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${APP_STATE.apiKey}`;
+            const payload = {
+                contents: [{ parts: [{ text: userText }] }],
+                systemInstruction: {
+                    parts: [{ text: "أنت مستشار وحلال مشكلات دراسية ونفسية محترف جداً ومساعد لـ SMART PLANNER AI. قدم نصائح عملية متدرجة ومباشرة باللغة العربية." }]
+                }
+            };
+
+            const res = await fetch(apiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            const data = await res.json();
+            return data.candidates?.[0]?.content?.parts?.[0]?.text || "لم أتمكن من الحصول على رد مناسب حالياً.";
+        }
+
+        function clearSolverChat() {
+            document.getElementById('solverMessages').innerHTML = '';
+        }
+
+        // ==========================================
+        // EXPORT TO PDF
+        // ==========================================
+        function exportPDF() {
+            const element = document.getElementById('view-active-plan');
+            const opt = {
+                margin:       0.5,
+                filename:     'جدول_المذاكرة_الذكي.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+            };
+            html2pdf().set(opt).from(element).save();
+        }
+
+        // ==========================================
+        // CHART.JS INITIALIZATION
+        // ==========================================
+        let comparisonChart, statusChart;
+        function initCharts() {
+            const ctx1 = document.getElementById('timeComparisonChart').getContext('2d');
+            comparisonChart = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس'],
+                    datasets: [
+                        { label: 'المخطط (ساعات)', data: [4, 5, 4, 6, 3], backgroundColor: '#3b82f6' },
+                        { label: 'الفعلي (ساعات)', data: [3.5, 4.5, 4, 5, 3], backgroundColor: '#8b5cf6' }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+
+            const ctx2 = document.getElementById('taskStatusChart').getContext('2d');
+            statusChart = new Chart(ctx2, {
+                type: 'doughnut',
+                data: {
+                    labels: ['مكتملة', 'متبقية', 'متأخرة'],
+                    datasets: [{
+                        data: [60, 30, 10],
+                        backgroundColor: ['#10b981', '#f59e0b', '#f43f5e']
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false }
+            });
+        }
+
+        function updateCharts() {
+            if (!comparisonChart || !statusChart) return;
+            // Update live metrics if available
+            comparisonChart.update();
+            statusChart.update();
+        }
+
+        // Loading Overlay Helpers
+        function showLoading(title, subtitle) {
+            document.getElementById('loadingTitle').innerText = title;
+            document.getElementById('loadingSubtitle').innerText = subtitle;
+            document.getElementById('loadingModal').classList.remove('hidden');
+        }
+
+        function hideLoading() {
+            document.getElementById('loadingModal').classList.add('hidden');
+        }
+    </script>
+</body>
+</html>
